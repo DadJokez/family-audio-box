@@ -1,0 +1,35 @@
+{% set player = status|default({}) %}
+<section class="player-dock" aria-label="Playback controls" data-player-dock>
+  <div class="dock-progress" aria-hidden="true">
+    <span data-progress-bar style="width: {{ player.progress_percent|default(0) }}%"></span>
+  </div>
+  <div class="dock-track">
+    <div class="dock-artwork" data-artwork-wrap>
+      {% if player.artwork_url %}
+        <img src="{{ player.artwork_url }}" data-artwork alt="">
+      {% else %}
+        <span data-artwork-placeholder>{{ (player.title|default('F', true))[:1] }}</span>
+      {% endif %}
+    </div>
+    <div class="dock-copy">
+      <strong data-bind="title">{{ player.title|default('Nothing playing', true) }}</strong>
+      <span data-bind="track_title">{{ player.track_title|default('Place a known tag on the box', true) }}</span>
+    </div>
+  </div>
+  <div class="dock-controls">
+    <button class="icon-control" type="button" data-action="previous" aria-label="Previous track">Previous</button>
+    <button class="play-control" type="button" data-action="toggle" aria-label="Play or pause">
+      <span data-bind="play_label">{{ 'Pause' if player.playing else 'Play' }}</span>
+    </button>
+    <button class="icon-control" type="button" data-action="next" aria-label="Next track">Next</button>
+  </div>
+  <div class="dock-volume">
+    <label for="dock-volume">Volume <span class="u-mono" data-bind="volume">{{ player.volume|default(50) }}</span></label>
+    <input id="dock-volume" type="range" min="0" max="100" step="1" value="{{ player.volume|default(50) }}" data-volume>
+  </div>
+  <div class="dock-time u-mono">
+    <span data-bind="position_label">{{ player.position_label|default('0:00') }}</span>
+    <span>/</span>
+    <span data-bind="duration_label">{{ player.duration_label|default('--:--') }}</span>
+  </div>
+</section>

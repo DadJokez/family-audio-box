@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong · FamilyBox{% endblock %}
+{% block content %}
+<section class="empty-state error-state">
+  <span class="empty-index u-mono">{{ status_code }}</span>
+  <h1 class="u-display">{{ heading }}</h1>
+  <p>{{ detail }}</p>
+  <a class="button button--primary" href="/now-playing">Return to the player</a>
+</section>
+{% endblock %}

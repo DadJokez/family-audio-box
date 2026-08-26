@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Library · FamilyBox{% endblock %}
+{% block content %}
+<header class="page-header page-header--split">
+  <div>
+    <span class="u-eyebrow">Local library</span>
+    <h1 class="u-display">Stories stored on this box.</h1>
+    <p>{{ contents|length }} item{% if contents|length != 1 %}s{% endif %} available without the internet.</p>
+  </div>
+  <button class="button button--pop" type="button" data-dialog-open="import-dialog">Import audio</button>
+</header>
+
+{% if contents %}
+<section class="library-grid" aria-label="Imported content">
+  {% for item in contents %}
+  <a class="library-card" href="/library/{{ item.id }}">
+    <div class="library-artwork">
+      {% if item.artwork_path %}
+        <img src="/artwork/{{ item.id }}" alt="">
+      {% else %}
+        <span>{{ item.title[:1] }}</span>
+      {% endif %}
+      <small>{{ item.track_count }} track{% if item.track_count != 1 %}s{% endif %}</small>
+    </div>
+    <div class="library-card-copy">
+      <span class="u-eyebrow">{{ item.content_type|replace('_', ' ') }}</span>
+      <h2>{{ item.title }}</h2>
+      <p>{{ item.total_duration_label|default('Duration available after first play') }}</p>
+    </div>
+  </a>
+  {% endfor %}
+</section>
+{% else %}
+<section class="empty-state">
+  <span class="empty-index u-mono">00</span>
+  <h2 class="u-display">Your shelf is ready.</h2>
+  <p>Import MP3, M4A, or M4B files. A group of files becomes one ordered story.</p>
+  <button class="button button--primary" type="button" data-dialog-open="import-dialog">Choose audio files</button>
+</section>
+{% endif %}
+
+<dialog id="import-dialog" class="dialog">
+  <form method="post" action="/library/import" enctype="multipart/form-data" class="stack-form" data-upload-form>
+    <div class="dialog-head">
+      <div>
+        <span class="u-eyebrow">Add to this box</span>
+        <h2>Import local audio</h2>
+      </div>
+      <button class="close-button" type="button" data-dialog-close aria-label="Close">Close</button>
+    </div>
+    <label class="field">
+      <span>Title</span>
+      <input type="text" name="title" required maxlength="160" placeholder="The Wind in the Willows">
+    </label>
+    <label class="file-drop">
+      <strong>Audio files</strong>
+      <span>Select one book file or several chapters. Filename order becomes play order.</span>
+      <input type="file" name="audio_files" accept=".mp3,.m4a,.m4b,audio/mpeg,audio/mp4" multiple required>
+    </label>
+    <label class="field">
+      <span>Cover artwork <small>optional</small></span>
+      <input type="file" name="artwork" accept="image/jpeg,image/png,image/webp">
+    </label>
+    <div class="form-actions">
+      <button class="button button--ghost" type="button" data-dialog-close>Cancel</button>
+      <button class="button button--primary" type="submit">Import to box</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

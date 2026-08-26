@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#faf8f3">
+    <title>{% block title %}FamilyBox{% endblock %}</title>
+    <link rel="icon" href="/static/orb.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/app.css">
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body data-page="{{ active_page|default('') }}">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="/now-playing" aria-label="FamilyBox home">
+          <img src="/static/orb.svg" width="34" height="34" alt="">
+          <span>FamilyBox</span>
+        </a>
+
+        <div class="device-summary">
+          <span class="status-dot{% if hardware_ok is sameas false %} status-dot--warn{% endif %}"></span>
+          <span>{{ device.name if device else 'This player' }}</span>
+          <small class="u-mono">{{ device_short_id|default('LOCAL') }}</small>
+        </div>
+
+        <nav class="primary-nav" aria-label="Player administration">
+          <a href="/now-playing" {% if active_page == 'now-playing' %}aria-current="page"{% endif %}>
+            <span>Now playing</span><span class="nav-index">01</span>
+          </a>
+          <a href="/library" {% if active_page == 'library' %}aria-current="page"{% endif %}>
+            <span>Library</span><span class="nav-index">02</span>
+          </a>
+          <a href="/tags" {% if active_page == 'tags' %}aria-current="page"{% endif %}>
+            <span>NFC tags</span><span class="nav-index">03</span>
+          </a>
+          <a href="/device" {% if active_page == 'device' %}aria-current="page"{% endif %}>
+            <span>Device</span><span class="nav-index">04</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-foot">
+          <span class="u-eyebrow">Local first</span>
+          <p>Playback stays on this box, even when your network does not.</p>
+        </div>
+      </aside>
+
+      <main id="main-content" class="main-content">
+        {% if flash %}
+          <div class="callout callout--{{ flash.kind|default('info') }}" role="status">
+            {{ flash.message }}
+          </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
+
+      {% include "partials/player_dock.html" %}
+      <nav class="mobile-nav" aria-label="Player administration">
+        <a href="/now-playing" {% if active_page == 'now-playing' %}aria-current="page"{% endif %}>Playing</a>
+        <a href="/library" {% if active_page == 'library' %}aria-current="page"{% endif %}>Library</a>
+        <a href="/tags" {% if active_page == 'tags' %}aria-current="page"{% endif %}>Tags</a>
+        <a href="/device" {% if active_page == 'device' %}aria-current="page"{% endif %}>Device</a>
+      </nav>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ content.title }} · FamilyBox{% endblock %}
+{% block content %}
+<header class="page-header detail-header">
+  <a class="back-link" href="/library">Back to library</a>
+  <div>
+    <span class="u-eyebrow">{{ content.content_type|replace('_', ' ') }}</span>
+    <h1 class="u-display">{{ content.title }}</h1>
+    <p>{{ tracks|length }} track{% if tracks|length != 1 %}s{% endif %} · Stored locally</p>
+  </div>
+</header>
+
+<div class="detail-grid">
+  <section class="card">
+    <div class="card-head"><h2>Details</h2></div>
+    <form method="post" action="/library/{{ content.id }}/edit" enctype="multipart/form-data" class="stack-form">
+      <label class="field">
+        <span>Title</span>
+        <input type="text" name="title" value="{{ content.title }}" required maxlength="160">
+      </label>
+      <label class="field">
+        <span>Replace artwork <small>optional</small></span>
+        <input type="file" name="artwork" accept="image/jpeg,image/png,image/webp">
+      </label>
+      <button class="button button--primary" type="submit">Save changes</button>
+    </form>
+  </section>
+
+  <section class="card tracks-card">
+    <div class="card-head">
+      <h2>Tracks</h2>
+      <span class="u-mono u-muted">{{ tracks|length }}</span>
+    </div>
+    <ol class="track-list">
+      {% for track in tracks %}
+      <li>
+        <span class="track-index u-mono">{{ '%02d'|format(loop.index) }}</span>
+        <span><strong>{{ track.title }}</strong><small>{{ track.filename }}</small></span>
+        <span class="u-mono u-muted">{{ track.duration_label|default('—') }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <section class="danger-zone">
+    <div><h2>Remove from this box</h2><p>This deletes the local media and unassigns its NFC tags.</p></div>
+    <form method="post" action="/library/{{ content.id }}/delete" onsubmit="return confirm('Delete this content and its local files?')">
+      <button class="button button--danger" type="submit">Delete content</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

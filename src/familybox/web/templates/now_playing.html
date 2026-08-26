@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Now playing · FamilyBox{% endblock %}
+{% block content %}
+<header class="page-header page-header--split">
+  <div>
+    <span class="u-eyebrow">Now playing</span>
+    <h1 class="u-display">The story on this box.</h1>
+  </div>
+  <div class="tag-readout" data-tag-readout>
+    <span class="status-dot{% if not nfc.uid %} status-dot--quiet{% endif %}"></span>
+    <span>
+      <small>{{ 'Detected tag' if nfc.uid else 'NFC reader ready' }}</small>
+      <strong class="u-mono" data-bind="nfc_uid">{{ nfc.uid|default('Waiting for a tag', true) }}</strong>
+    </span>
+  </div>
+</header>
+
+<section class="now-grid">
+  <article class="hero-player">
+    <div class="hero-artwork">
+      {% if status.artwork_url %}
+        <img src="{{ status.artwork_url }}" alt="Cover artwork for {{ status.title }}">
+      {% else %}
+        <div class="artwork-empty" aria-hidden="true">
+          <span>{{ (status.title|default('F', true))[:1] }}</span>
+          <small>FamilyBox</small>
+        </div>
+      {% endif %}
+    </div>
+    <div class="hero-copy">
+      <span class="state-label"><span class="status-dot{% if not status.playing %} status-dot--quiet{% endif %}"></span><span data-bind="state_label">{{ status.state_label|default('Ready') }}</span></span>
+      <h2 class="u-display" data-bind="title">{{ status.title|default('Place a story on the box', true) }}</h2>
+      <p data-bind="track_title">{{ status.track_title|default('Known tags begin where this player left off.', true) }}</p>
+
+      <div class="chapter-progress">
+        <div class="progress-labels">
+          <span>Chapter <span class="u-mono" data-bind="track_number">{{ status.track_number|default('—', true) }}</span></span>
+          <span class="u-mono"><span data-bind="position_label">{{ status.position_label|default('0:00') }}</span> / <span data-bind="duration_label">{{ status.duration_label|default('--:--') }}</span></span>
+        </div>
+        <div class="progress-track"><span data-progress-bar style="width: {{ status.progress_percent|default(0) }}%"></span></div>
+      </div>
+
+      <div class="large-controls" role="group" aria-label="Playback controls">
+        <button type="button" class="button button--outline" data-action="previous">Previous</button>
+        <button type="button" class="button button--primary" data-action="toggle"><span data-bind="play_label">{{ 'Pause' if status.playing else 'Play' }}</span></button>
+        <button type="button" class="button button--outline" data-action="next">Next</button>
+      </div>
+    </div>
+  </article>
+
+  <aside class="listening-card">
+    <div>
+      <span class="u-eyebrow">This player</span>
+      <h3>Listening details</h3>
+    </div>
+    <dl class="detail-list">
+      <div><dt>Volume</dt><dd><span data-bind="volume">{{ status.volume|default(50) }}</span>%</dd></div>
+      <div><dt>Tracks</dt><dd data-bind="track_count">{{ status.track_count|default(0) }}</dd></div>
+      <div><dt>Resume saved</dt><dd data-bind="resume_label">{{ status.resume_label|default('No position yet') }}</dd></div>
+      <div><dt>Source</dt><dd>{{ status.provider|default('Local', true)|title }}</dd></div>
+    </dl>
+    <p class="quiet-note">Progress belongs to this player. Another FamilyBox keeps its own place in the same story.</p>
+  </aside>
+</section>
+{% endblock %}

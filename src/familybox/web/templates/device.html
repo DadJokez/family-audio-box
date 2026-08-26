@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Device · FamilyBox{% endblock %}
+{% block content %}
+<header class="page-header page-header--split">
+  <div>
+    <span class="u-eyebrow">Device</span>
+    <h1 class="u-display">{{ device.name }}</h1>
+    <p>This player’s identity, storage, and hardware at a glance.</p>
+  </div>
+  <span class="device-health"><span class="status-dot{% if not device.hardware_ok %} status-dot--warn{% endif %}"></span>{{ 'Ready' if device.hardware_ok else 'Needs attention' }}</span>
+</header>
+
+<section class="metric-grid">
+  <article class="metric metric--hero"><span>Disk available</span><strong class="u-display">{{ device.disk_free }}</strong><small>{{ device.disk_used_percent }}% used</small></article>
+  <article class="metric"><span>Uptime</span><strong>{{ device.uptime }}</strong><small>Since last boot</small></article>
+  <article class="metric"><span>Software</span><strong class="u-mono">v{{ device.software_version }}</strong><small>FamilyBox</small></article>
+</section>
+
+<div class="detail-grid">
+  <section class="card">
+    <div class="card-head"><h2>Identity</h2></div>
+    <dl class="detail-list">
+      <div><dt>Device ID</dt><dd class="u-mono break-all">{{ device.id }}</dd></div>
+      <div><dt>Hostname</dt><dd class="u-mono">{{ device.hostname }}</dd></div>
+      <div><dt>Address</dt><dd class="u-mono">{{ device.ip_address }}</dd></div>
+      <div><dt>Admin URL</dt><dd class="u-mono">http://{{ device.hostname }}.local</dd></div>
+    </dl>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Hardware</h2></div>
+    <dl class="detail-list">
+      {% for item in device.hardware %}
+      <div><dt>{{ item.name }}</dt><dd><span class="status-dot{% if not item.ok %} status-dot--warn{% endif %}"></span>{{ item.status }}</dd></div>
+      {% endfor %}
+    </dl>
+  </section>
+</div>
+
+{% if dev_endpoints %}
+<section class="card dev-panel">
+  <div class="card-head"><div><span class="u-eyebrow">Development hardware</span><h2>Simulate the box</h2></div></div>
+  <p>These controls exist only while <code>FAMILYBOX_DEV_ENDPOINTS=true</code>.</p>
+  <form class="dev-controls" data-dev-nfc>
+    <label class="field"><span>NFC UID</span><input type="text" name="uid" value="04:A1:B2:C3:D4:E5:80"></label>
+    <button class="button button--primary" type="submit">Place tag</button>
+    <button class="button button--outline" type="button" data-dev-remove>Remove tag</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

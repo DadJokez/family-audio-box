@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}NFC tags · FamilyBox{% endblock %}
+{% block content %}
+<header class="page-header page-header--split">
+  <div>
+    <span class="u-eyebrow">NFC tags</span>
+    <h1 class="u-display">What each object plays.</h1>
+    <p>Assignments live on this box. The tag itself only supplies its immutable ID.</p>
+  </div>
+  <div class="reader-state"><span class="status-dot"></span>Reader active</div>
+</header>
+
+<section class="unknown-tag-card{% if not last_unknown_uid %} unknown-tag-card--waiting{% endif %}" data-unknown-card data-current-unknown="{{ last_unknown_uid|default('', true) }}">
+  <div>
+    <span class="u-eyebrow">Last unassigned tag</span>
+    <h2 class="u-mono" data-bind="last_unknown_uid">{{ last_unknown_uid|default('Waiting for a new tag', true) }}</h2>
+    <p>{% if last_unknown_uid %}Choose what this object should play. The change works immediately.{% else %}Place an unassigned card, toy, or figure on the reader.{% endif %}</p>
+  </div>
+  {% if last_unknown_uid and contents %}
+  <form method="post" action="/tags/assign" class="assign-form">
+    <input type="hidden" name="uid" value="{{ last_unknown_uid }}" data-unknown-input>
+    <label class="field">
+      <span>Content</span>
+      <select name="content_id" required>
+        <option value="">Choose from the library</option>
+        {% for item in contents %}<option value="{{ item.id }}">{{ item.title }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="field">
+      <span>Tag name <small>optional</small></span>
+      <input type="text" name="name" maxlength="100" placeholder="Blue fox">
+    </label>
+    <button class="button button--pop" type="submit">Assign tag</button>
+  </form>
+  {% elif last_unknown_uid %}
+  <div class="assign-form">
+    <p>Add a story before assigning this object.</p>
+    <a class="button button--pop" href="/library">Open the library</a>
+  </div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <div><span class="u-eyebrow">Known objects</span><h2>{{ tags|length }} assignment{% if tags|length != 1 %}s{% endif %}</h2></div>
+  </div>
+  {% if tags %}
+  <div class="tag-table" role="table" aria-label="Known NFC tags">
+    <div class="tag-row tag-row--head" role="row">
+      <span role="columnheader">Object</span><span role="columnheader">UID</span><span role="columnheader">Content</span><span></span>
+    </div>
+    {% for tag in tags %}
+    <div class="tag-row" role="row">
+      <span role="cell"><strong>{{ tag.name or 'Unnamed object' }}</strong></span>
+      <span role="cell" class="u-mono">{{ tag.uid }}</span>
+      <span role="cell"><a href="/library/{{ tag.content_id }}">{{ tag.content_title }}</a></span>
+      <form method="post" action="/tags/{{ tag.uid }}/delete" role="cell" onsubmit="return confirm('Remove this tag assignment?')">
+        <button class="text-button" type="submit">Unassign</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="inline-empty">No objects are assigned yet. Place a new tag on the box to begin.</div>
+  {% endif %}
+</section>
+{% endblock %}
