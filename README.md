@@ -5,7 +5,7 @@ NFC-equipped card, toy, or figure on the box and a local story starts where
 that specific player left off. Remove the object to pause; replace it to
 resume.
 
-The first release targets Raspberry Pi Zero 2 W, PN532 NFC, a MAX98357A I²S
+The first release targets Raspberry Pi 3 Model A+, PN532 NFC, a MAX98357A I²S
 amplifier, physical playback controls, and a small server-rendered FastAPI
 administration site. It does not emulate or depend on Toniebox.
 
@@ -64,7 +64,8 @@ The mpv IPC tests use a fake Unix socket server, so CI does not need speakers.
 
 ## Raspberry Pi
 
-Start with Raspberry Pi OS Lite 64-bit on a Pi Zero 2 W. Review
+Start with Raspberry Pi OS Lite 64-bit on a Pi 3 Model A+. The Zero 2 W remains
+an optional compact variant using the same GPIO assignments. Review
 [hardware](docs/hardware.md) and [wiring](docs/wiring.md) before applying power.
 The current Adafruit PN532 guidance recommends **SPI on Raspberry Pi** because
 the Pi I²C controller has clock-stretching limitations; SPI is therefore the
@@ -136,10 +137,13 @@ local process.
 
 ## Hardware and power safety
 
-V1 uses an enclosed USB power bank and a Pimoroni OnOff SHIM. It does not use
-loose lithium cells. Disconnect power while wiring. Confirm amplifier and
-speaker connections before enabling I²S, and never attach a speaker output to a
-GPIO pin.
+The current Pi 3A+ bench build uses an enclosed USB power bank without a power
+controller: run `sudo poweroff`, wait for microSD activity to cease, and then
+disconnect it. The final portable design requires a tested clean-shutdown and
+power-cutoff solution; the Pimoroni OnOff SHIM remains the documented option.
+The project does not use loose lithium cells. Disconnect power while wiring.
+Confirm amplifier and speaker connections before enabling I²S, and never attach
+a speaker output to a GPIO pin.
 
 ## License
 

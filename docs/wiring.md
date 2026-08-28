@@ -57,7 +57,7 @@ for the board actually purchased. Adafruit's Raspberry Pi wiring is documented
 in its [PN532 guide](https://learn.adafruit.com/adafruit-pn532-rfid-nfc?view=all#python-computer-wiring-2986203).
 
 ```text
-Raspberry Pi Zero 2 W                 PN532 (SPI mode)
+Raspberry Pi 3 Model A+               PN532 (SPI mode)
 physical 17 / 3V3   ----------------  3.3V / VCC
 physical 20 / GND   ----------------  GND
 physical 19 / GPIO10 ---------------  MOSI
@@ -78,7 +78,7 @@ wall and recessed placement area before committing enclosure dimensions.
 ## MAX98357A and speaker
 
 ```text
-Raspberry Pi Zero 2 W                 MAX98357A
+Raspberry Pi 3 Model A+               MAX98357A
 physical 4  / 5V    ----------------  VIN
 physical 14 / GND   ----------------  GND
 physical 12 / GPIO18 ---------------  BCLK
@@ -122,6 +122,11 @@ disconnected ground makes inputs float or appear unresponsive; a GPIO shorted
 to ground appears permanently pressed.
 
 ## OnOff SHIM
+
+This section describes the supported final-build option. The current Pi 3A+
+V1 build omits the SHIM: do not enable its overlays, and use the manual safe
+shutdown procedure in the hardware guide. GPIO4 and GPIO17 remain reserved so
+adding a tested power controller later does not require rewiring other parts.
 
 Mount or wire the SHIM exactly as Pimoroni intends so its USB input is the only
 5 V source. Its logical connections are:

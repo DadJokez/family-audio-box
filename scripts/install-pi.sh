@@ -173,6 +173,12 @@ note "installing FamilyBox and Raspberry Pi hardware dependencies"
 "${APP_ROOT}/.venv/bin/python" -m pip install --upgrade pip setuptools wheel
 "${APP_ROOT}/.venv/bin/python" -m pip install "${DEPLOY_SOURCE}[pi]"
 
+DIAGNOSTICS_LINK=/usr/local/bin/familybox-diagnostics
+if [[ -e ${DIAGNOSTICS_LINK} && ! -L ${DIAGNOSTICS_LINK} ]]; then
+  die "refusing to replace non-symlink ${DIAGNOSTICS_LINK}"
+fi
+ln -sfn "${APP_ROOT}/.venv/bin/familybox-diagnostics" "${DIAGNOSTICS_LINK}"
+
 CURRENT_HOSTNAME=${REQUESTED_HOSTNAME:-$(hostname -s)}
 if [[ ! ${CURRENT_HOSTNAME} =~ ^familybox- ]]; then
   note "hostname '${CURRENT_HOSTNAME}' does not follow the recommended familybox-<device> pattern"
