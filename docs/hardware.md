@@ -41,7 +41,7 @@ quantity does not mean that the first player needs every item in the pack.
 | Audio amplifier | AITRIP MAX98357A, three-pack, ASIN B0GCM7QRP6 | Amazon; ordered August 27, 2026 | One board is needed; the other two are spares. |
 | Speaker | GRS 3FR-4 3-inch 4-ohm full-range speaker, ASIN B00K2ESJZ2 | Amazon; ordered August 27, 2026 | One speaker. |
 | Transport controls | 24-piece assorted-color 16 mm momentary button set, ASIN B08SKJ6V7Z | Amazon; ordered August 27, 2026 | Use three distinguishable colors for previous, play/pause, and next. |
-| Volume control | Keyestudio KS0013 rotary encoder module, SKU 078758 | Micro Center order | Includes a push action for mute or the configured secondary action. |
+| Volume control | Keyestudio KS0013 rotary encoder module, SKU 078758 | Micro Center order; hold for voltage verification | The [manufacturer lists a 5 V supply](https://wiki.keyestudio.com/Ks0013_keyestudio_Rotary_Encoder_Module), but Pi GPIO is 3.3 V-only. Do not wire it until the exact board is inspected; replace it with a bare EC11 or explicitly 3.3 V-safe module if needed. |
 | Power | Miady 5,000 mAh USB power banks, two-pack, ASIN B08T8TDS8S | Amazon; ordered August 27, 2026 | One bank is needed; keep the second as a spare. |
 | GPIO prototyping | Keyestudio Raspberry Pi GPIO breakout, ribbon cable, and 400-point breadboard, ASIN B072XBX3XX | Amazon; ordered August 27, 2026 | Use for bench wiring only; remove the breadboard from the final portable build. |
 | Hookup wire | MECCANIXITY 26 AWG two-conductor red/black silicone wire, ASIN B0C6F7JRWM | Amazon; ordered August 27, 2026 | Best suited to paired power/speaker runs; the jumper bundle covers individual bench signals. |
@@ -175,6 +175,13 @@ GPIOs and its common terminal goes to ground. Its push switch is wired like the
 other buttons. See the
 [GPIO Zero Button and RotaryEncoder reference](https://gpiozero.readthedocs.io/en/stable/api_input.html).
 
+That direct-to-ground description applies to a bare mechanical encoder. The
+purchased Keyestudio KS0013 is a module with support components, not a bare
+encoder, and its manufacturer specifies a 5 V supply. Do not connect its `+`
+pin to the Pi's 5 V rail: that could expose 3.3 V-only GPIO inputs to 5 V.
+Inspect the exact board and verify 3.3 V operation before using it, or substitute
+a bare EC11 encoder.
+
 Use these BCM assignments exactly:
 
 | Control | BCM GPIO |
@@ -264,8 +271,15 @@ may become a clean power-off that needs a physical button press to start again.
 After the installer-requested reboot, run the read-only readiness summary:
 
 ```sh
-familybox-diagnostics
+familybox-diagnostics --stage base
+familybox-diagnostics --stage nfc
+familybox-diagnostics --stage audio
 ```
+
+The stages are cumulative and match the
+[first hardware bring-up checklist](bring-up.md). Use only the stage physically
+reached so unopened parts do not produce misleading failures. Omitting
+`--stage` runs all checks.
 
 It exits unsuccessfully if the Pi model, SPI0 device, GPIO character device,
 MAX98357A ALSA card, or required boot configuration is missing. SPI device-node

@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from familybox.diagnostics import (
+    DiagnosticStage,
     collect_pi_diagnostics,
     computer_model,
     main,
@@ -42,6 +43,26 @@ def test_complete_pi_root_passes_every_readiness_check(tmp_path: Path) -> None:
     assert "PASS  SPI0 device" in render_diagnostics(checks)
 
 
+def test_stages_do_not_require_components_that_are_still_boxed(tmp_path: Path) -> None:
+    _complete_pi_root(tmp_path)
+
+    base = collect_pi_diagnostics(tmp_path, DiagnosticStage.BASE)
+    nfc = collect_pi_diagnostics(tmp_path, DiagnosticStage.NFC)
+    audio = collect_pi_diagnostics(tmp_path, DiagnosticStage.AUDIO)
+
+    assert [check.name for check in base] == [
+        "Raspberry Pi model",
+        "GPIO character device",
+    ]
+    assert [check.name for check in nfc] == [
+        "Raspberry Pi model",
+        "GPIO character device",
+        "SPI boot configuration",
+        "SPI0 device",
+    ]
+    assert len(audio) == 6
+
+
 def test_missing_hardware_produces_actionable_failures(tmp_path: Path) -> None:
     (tmp_path / "boot").mkdir()
     (tmp_path / "boot/config.txt").write_text(
@@ -74,8 +95,9 @@ def test_model_label_distinguishes_simulation_and_pi(tmp_path: Path) -> None:
 def test_json_cli_is_script_friendly(tmp_path: Path, capsys) -> None:
     _complete_pi_root(tmp_path)
 
-    assert main(("--root", str(tmp_path), "--json")) == 0
+    assert main(("--root", str(tmp_path), "--stage", "base", "--json")) == 0
     payload = json.loads(capsys.readouterr().out)
+    assert len(payload) == 2
     assert payload[0] == {
         "name": "Raspberry Pi model",
         "ok": True,

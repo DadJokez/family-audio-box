@@ -66,7 +66,8 @@ The mpv IPC tests use a fake Unix socket server, so CI does not need speakers.
 
 Start with Raspberry Pi OS Lite 64-bit on a Pi 3 Model A+. The Zero 2 W remains
 an optional compact variant using the same GPIO assignments. Review
-[hardware](docs/hardware.md) and [wiring](docs/wiring.md) before applying power.
+[the staged first-hardware checklist](docs/bring-up.md),
+[hardware](docs/hardware.md), and [wiring](docs/wiring.md) before applying power.
 The current Adafruit PN532 guidance recommends **SPI on Raspberry Pi** because
 the Pi I²C controller has clock-stretching limitations; SPI is therefore the
 supported V1 connection despite I²C being the initial preference.

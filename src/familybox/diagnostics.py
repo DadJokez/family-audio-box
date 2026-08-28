@@ -6,6 +6,7 @@ import argparse
 import json
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
+from enum import StrEnum
 from pathlib import Path
 
 
@@ -16,6 +17,15 @@ class DiagnosticCheck:
     name: str
     ok: bool
     detail: str
+
+
+class DiagnosticStage(StrEnum):
+    """Cumulative hardware stages used by the bring-up checklist."""
+
+    BASE = "base"
+    NFC = "nfc"
+    AUDIO = "audio"
+    ALL = "all"
 
 
 def read_pi_model(path: Path = Path("/proc/device-tree/model")) -> str | None:
@@ -39,26 +49,21 @@ def computer_model(
     return read_pi_model(model_path) or "Raspberry Pi (model unavailable)"
 
 
-def collect_pi_diagnostics(root: Path = Path("/")) -> list[DiagnosticCheck]:
+def collect_pi_diagnostics(
+    root: Path = Path("/"),
+    stage: DiagnosticStage | str = DiagnosticStage.ALL,
+) -> list[DiagnosticCheck]:
     """Inspect a running Pi or a mounted test root without changing it."""
 
+    selected_stage = DiagnosticStage(stage)
     model = read_pi_model(root / "proc/device-tree/model")
     checks = [
         DiagnosticCheck(
             "Raspberry Pi model",
             model is not None and model.startswith("Raspberry Pi"),
             model or "missing /proc/device-tree/model",
-        )
+        ),
     ]
-
-    spi_path = root / "dev/spidev0.0"
-    checks.append(
-        DiagnosticCheck(
-            "SPI0 device",
-            spi_path.exists(),
-            str(spi_path) if spi_path.exists() else "missing /dev/spidev0.0",
-        )
-    )
 
     gpio_devices = sorted(path.name for path in (root / "dev").glob("gpiochip*"))
     checks.append(
@@ -68,8 +73,42 @@ def collect_pi_diagnostics(root: Path = Path("/")) -> list[DiagnosticCheck]:
             ", ".join(gpio_devices) if gpio_devices else "no /dev/gpiochip* device",
         )
     )
+    if selected_stage == DiagnosticStage.BASE:
+        return checks
+
+    config_path = _boot_config_path(root)
+    config = _read_text(config_path) if config_path is not None else None
+    active_lines = _active_config_lines(config or "")
+    spi_path = root / "dev/spidev0.0"
+    checks.append(
+        DiagnosticCheck(
+            "SPI boot configuration",
+            "dtparam=spi=on" in active_lines,
+            "dtparam=spi=on is active"
+            if "dtparam=spi=on" in active_lines
+            else "missing active dtparam=spi=on",
+        )
+    )
+    checks.append(
+        DiagnosticCheck(
+            "SPI0 device",
+            spi_path.exists(),
+            str(spi_path) if spi_path.exists() else "missing /dev/spidev0.0",
+        )
+    )
+    if selected_stage == DiagnosticStage.NFC:
+        return checks
 
     audio_cards = _read_text(root / "proc/asound/cards")
+    checks.append(
+        DiagnosticCheck(
+            "MAX98357A boot overlay",
+            "dtoverlay=max98357a,no-sdmode" in active_lines,
+            "dtoverlay=max98357a,no-sdmode is active"
+            if "dtoverlay=max98357a,no-sdmode" in active_lines
+            else "missing active dtoverlay=max98357a,no-sdmode",
+        )
+    )
     checks.append(
         DiagnosticCheck(
             "MAX98357A audio card",
@@ -77,28 +116,6 @@ def collect_pi_diagnostics(root: Path = Path("/")) -> list[DiagnosticCheck]:
             "MAX98357A listed by ALSA"
             if audio_cards is not None and "MAX98357A" in audio_cards
             else "MAX98357A not listed in /proc/asound/cards",
-        )
-    )
-
-    config_path = _boot_config_path(root)
-    config = _read_text(config_path) if config_path is not None else None
-    active_lines = _active_config_lines(config or "")
-    checks.extend(
-        (
-            DiagnosticCheck(
-                "SPI boot configuration",
-                "dtparam=spi=on" in active_lines,
-                "dtparam=spi=on is active"
-                if "dtparam=spi=on" in active_lines
-                else "missing active dtparam=spi=on",
-            ),
-            DiagnosticCheck(
-                "MAX98357A boot overlay",
-                "dtoverlay=max98357a,no-sdmode" in active_lines,
-                "dtoverlay=max98357a,no-sdmode is active"
-                if "dtoverlay=max98357a,no-sdmode" in active_lines
-                else "missing active dtoverlay=max98357a,no-sdmode",
-            ),
         )
     )
     return checks
@@ -122,9 +139,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=Path("/"),
         help="inspect another mounted root filesystem instead of /",
     )
+    parser.add_argument(
+        "--stage",
+        choices=tuple(stage.value for stage in DiagnosticStage),
+        default=DiagnosticStage.ALL.value,
+        help="check only the cumulative hardware stage reached so far",
+    )
     parser.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     args = parser.parse_args(argv)
-    checks = collect_pi_diagnostics(args.root)
+    checks = collect_pi_diagnostics(args.root, DiagnosticStage(args.stage))
     if args.json:
         print(json.dumps([asdict(check) for check in checks], indent=2))
     else:
