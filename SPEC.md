@@ -46,12 +46,13 @@ Apple Music, Audible, NAS libraries, and family synchronization.
 
 ## Hardware target
 
-- Raspberry Pi Zero 2 W with Raspberry Pi OS Lite 64-bit
+- Raspberry Pi 3 Model A+ with Raspberry Pi OS Lite 64-bit
 - PN532 13.56 MHz reader, ISO14443-A / MIFARE Classic UID reads
 - MAX98357A mono I²S Class-D amplifier
 - 3-inch, 4-ohm, approximately 3 W speaker
 - enclosed 5,000 mAh USB power bank
-- Pimoroni OnOff SHIM
+- Clean-shutdown and power-cutoff controller for the final portable build;
+  Pimoroni OnOff SHIM is the currently documented option
 
 ### Pin allocation
 

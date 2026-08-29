@@ -19,7 +19,7 @@ are 3.3 V only. Never connect a 5 V signal to a GPIO pin.
 | PN532 SPI data in | MISO | 9 | 21 | Pi SPI0 MISO to PN532 MISO. |
 | PN532 SPI clock | SCK / SCLK | 11 | 23 | Pi SPI0 SCLK. |
 | PN532 chip select | SSEL / SS / CS | 8 | 24 | Pi SPI0 CE0, active low. |
-| Amplifier power | VIN | — | 4 (5V) | 5 V rail after the OnOff SHIM. Budget for amplifier peaks. |
+| Amplifier power | VIN | — | 4 (5V) | Pi 5 V rail for the current bench build; use the controller's switched 5 V rail only in a future SHIM build. Budget for amplifier peaks. |
 | Amplifier ground | GND | — | 14 (GND) | Common ground; keep the run short. |
 | Amplifier bit clock | BCLK | 18 | 12 | I2S PCM clock. |
 | Amplifier word clock | LRC / LRCLK / WS | 19 | 35 | I2S frame clock. |
@@ -57,7 +57,7 @@ for the board actually purchased. Adafruit's Raspberry Pi wiring is documented
 in its [PN532 guide](https://learn.adafruit.com/adafruit-pn532-rfid-nfc?view=all#python-computer-wiring-2986203).
 
 ```text
-Raspberry Pi Zero 2 W                 PN532 (SPI mode)
+Raspberry Pi 3 Model A+               PN532 (SPI mode)
 physical 17 / 3V3   ----------------  3.3V / VCC
 physical 20 / GND   ----------------  GND
 physical 19 / GPIO10 ---------------  MOSI
@@ -78,7 +78,7 @@ wall and recessed placement area before committing enclosure dimensions.
 ## MAX98357A and speaker
 
 ```text
-Raspberry Pi Zero 2 W                 MAX98357A
+Raspberry Pi 3 Model A+               MAX98357A
 physical 4  / 5V    ----------------  VIN
 physical 14 / GND   ----------------  GND
 physical 12 / GPIO18 ---------------  BCLK
@@ -117,11 +117,23 @@ For a five-pin encoder, the three-pin side is normally A, common, and B, while
 the two-pin side is normally the push switch, but confirm with a continuity
 meter. Do not connect the encoder common to 3.3 V in this active-low design.
 
+That wiring applies to a bare mechanical encoder. The purchased Keyestudio
+KS0013 is an active module whose
+[manufacturer specifies a 5 V supply](https://wiki.keyestudio.com/Ks0013_keyestudio_Rotary_Encoder_Module).
+Do not connect its `+` pin to 5 V while its outputs are connected to the Pi.
+Hold it for inspection and 3.3 V verification, or replace it with a bare EC11
+encoder; Raspberry Pi GPIO inputs are not 5 V-tolerant.
+
 Use a shared ground rail for the four push switches and encoder common. A
 disconnected ground makes inputs float or appear unresponsive; a GPIO shorted
 to ground appears permanently pressed.
 
 ## OnOff SHIM
+
+This section describes the supported final-build option. The current Pi 3A+
+V1 build omits the SHIM: do not enable its overlays, and use the manual safe
+shutdown procedure in the hardware guide. GPIO4 and GPIO17 remain reserved so
+adding a tested power controller later does not require rewiring other parts.
 
 Mount or wire the SHIM exactly as Pimoroni intends so its USB input is the only
 5 V source. Its logical connections are:
@@ -192,7 +204,8 @@ mpv still owns child-facing software volume.
 - Speaker is at least 4 ohms and is connected only across `SPK+`/`SPK-`.
 - No continuity exists between 5 V and ground.
 - No signal is assigned twice; GPIO4 and GPIO17 go only to the OnOff SHIM.
-- Buttons and encoder short inputs only to ground, never to 5 V.
+- Buttons and a verified bare encoder short inputs only to ground, never to
+  5 V. Do not install the KS0013 module until its logic voltage is verified.
 - Bare joints are insulated and the Pi is on nonconductive spacers.
 - The power bank can be disconnected quickly during the first test.
 

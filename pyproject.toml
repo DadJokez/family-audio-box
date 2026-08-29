@@ -47,6 +47,7 @@ dev = [
 
 [project.scripts]
 familybox = "familybox.main:run"
+familybox-diagnostics = "familybox.diagnostics:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/familybox"]

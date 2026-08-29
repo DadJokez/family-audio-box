@@ -26,6 +26,7 @@ from familybox.content.local import (
     LocalContentError,
     LocalContentProvider,
 )
+from familybox.diagnostics import computer_model
 from familybox.domain.models import ContentTrack, Device
 from familybox.hardware.interfaces import (
     AudioOutput,
@@ -506,6 +507,7 @@ def _device_view(runtime: FamilyBoxRuntimeView) -> dict[str, Any]:
         "id": device.id,
         "name": device.name,
         "hostname": runtime.settings.hostname,
+        "computer_model": computer_model(runtime.settings.hardware_mode),
         "ip_address": _local_ip_address(runtime.settings.hostname),
         "disk_free": _format_bytes(disk.free),
         "disk_used_percent": round((disk.used / disk.total) * 100) if disk.total else 0,

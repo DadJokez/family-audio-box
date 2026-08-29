@@ -9,6 +9,8 @@ from fastapi.testclient import TestClient
 
 import familybox.runtime as runtime_module
 from familybox.config import Settings
+from familybox.hardware.fake import FakeButtonController, FakeVolumeController
+from familybox.hardware.interfaces import ButtonAction
 from familybox.hardware.unavailable import (
     UnavailableAudioOutput,
     UnavailableButtonController,
@@ -57,6 +59,8 @@ def test_pages_health_and_local_import(settings: Settings) -> None:
             assert response.status_code == 200
             assert marker in response.text
 
+        assert "Development computer (simulated hardware)" in client.get("/device").text
+
         content_id = _import_story(client)
         detail = client.get(f"/library/{content_id}")
         assert detail.status_code == 200
@@ -101,6 +105,53 @@ def test_unknown_tag_assignment_starts_and_removal_pauses(settings: Settings) ->
         _wait_for(lambda: runtime.playback.status().paused)
         state = runtime.database.get_playback_state(settings.device_id, content_id)
         assert state is not None
+
+
+def test_complete_simulated_player_flow_survives_restart(settings: Settings) -> None:
+    uid = "04A1B2C3D4E580"
+    app = create_app(settings)
+    with TestClient(app) as client:
+        content_id = _import_story(client, "Restartable Story")
+        runtime: FamilyBoxRuntime = client.app.state.runtime
+        assert isinstance(runtime.buttons, FakeButtonController)
+        assert isinstance(runtime.volume, FakeVolumeController)
+
+        client.post("/api/dev/nfc", data={"uid": uid})
+        _wait_for(lambda: runtime.database.get_last_unknown_tag() is not None)
+        assigned = client.post(
+            "/tags/assign",
+            data={"uid": uid, "content_id": content_id, "name": "Blue figure"},
+            follow_redirects=False,
+        )
+        assert assigned.status_code == 303
+        _wait_for(lambda: runtime.playback.current_content_id == content_id)
+
+        runtime.buttons.press(ButtonAction.NEXT)
+        _wait_for(lambda: runtime.playback.status().track_index == 1)
+        runtime.volume.rotate(2)
+        _wait_for(lambda: runtime.playback.status().volume == 60)
+        runtime.buttons.press(ButtonAction.PLAY_PAUSE)
+        _wait_for(lambda: runtime.playback.status().paused)
+        runtime.buttons.press(ButtonAction.PLAY_PAUSE)
+        _wait_for(lambda: not runtime.playback.status().paused)
+
+        runtime.playback.seek(12)
+        client.post("/api/dev/nfc/remove")
+        _wait_for(lambda: runtime.playback.status().paused)
+        saved = runtime.database.get_playback_state(settings.device_id, content_id)
+        assert saved is not None
+        assert saved.track_index == 1
+        assert saved.position_seconds >= 12
+
+    restarted_app = create_app(settings)
+    with TestClient(restarted_app) as client:
+        restarted: FamilyBoxRuntime = client.app.state.runtime
+        client.post("/api/dev/nfc", data={"uid": uid})
+        _wait_for(lambda: restarted.playback.current_content_id == content_id)
+        status = restarted.playback.status()
+        assert status.track_index == 1
+        assert status.position_seconds >= 12
+        assert status.paused is False
 
 
 def test_edit_unassign_and_delete_workflows(settings: Settings) -> None:
