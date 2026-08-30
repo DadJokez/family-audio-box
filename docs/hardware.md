@@ -89,6 +89,8 @@ Official lifecycle and specification references:
 - Design or buy the final enclosure only after the Pi 3A+, speaker, NFC range,
   battery load, and wiring layout pass testing. Use a replaceable board plate.
   The selected buttons require 16 mm mounting holes unless the controls change.
+  The current CAD starting dimensions and fit-test plan are in the
+  [radio enclosure V1 specification](radio-enclosure-v1.md).
 - Buy additional NFC tags or objects only after confirming the included test
   card or fob reads reliably. Buy parts for additional players only after the
   first complete bench build passes.
